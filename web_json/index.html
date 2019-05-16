@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <title>Tugas pak angga | Web JSON</title>
+</head>
+<body>
+        <div class="container">
+                <h2>Data Pengunjung</h2>
+                <div class="col-md-12">
+                    <div class="col-md-10">
+                        <p>PERPUSTAKAAN UNWAHA</p>
+                    </div>
+					<div class="col-md-1">
+						<a href="data_json.php" class="btn btn-default">JSON</a>
+					</div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-success" data-toggle="modal" onclick="manage_pengunjung(0,0)">Tambah</button>
+                    </div>
+                </div>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Nama</th>
+                      <th>Email</th>
+                      <th>No. Telp</th>
+                      <th>Kesan</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="data_pengunjung">
+                    
+                  </tbody>
+                </table>
+        </div>
+        <div class="modal fade" id="manage_pengunjung" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" id="modal-label">Tambah Pengunjung</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <form class="col-md-12" id="data_pengunjung">
+                            <div class="form-group col-md-12">
+                                <label for="recipient-name" class="control-label">Nama</label>
+                                <input type="text" class="form-control" name="nama">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="recipient-name" class="control-label">Email</label>
+                                <input type="text" class="form-control" name="email">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="recipient-name" class="control-label">No. Telepon</label>
+                                <input type="text" class="form-control" name="no_telp">
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label for="message-text" class="control-label">Kesan</label>
+                                <textarea class="form-control" name="kesan"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+                  <button type="button" class="btn btn-primary" onclick="data_pengunjung()">Simpan</button>
+                </div>
+              </div>
+            </div>
+          </div>
+    <script>
+        var status_manage_pengunjung;
+        var id_pengunjung;
+        function init(){
+            $('tbody')[0].innerHTML = "";
+            $.ajax({
+                method:"GET",
+                url:"data_json.php",
+                success:(response)=>{
+                    var i;
+                    for(i=0;i<response.length;i++){
+                        $('tbody').append('<tr id="'+response[i].id+'"><td>'+(i+1)+'</td><td>'+response[i].nama+'</td><td>'+response[i].email+'</td><td>'+response[i].no_telp+'</td><td>'+response[i].kesan+'</td><td><button type="button" class="btn btn-danger"><span class="glyphicon glyphicon glyphicon-trash" aria-hidden="true"onclick="hapus_pengunjung('+response[i].id+')"></span></button> <button type="button" class="btn btn-primary" onclick="manage_pengunjung(1, '+response[i].id+')"><span class="glyphicon glyphicon glyphicon-pencil" aria-hidden="true"></button></td></tr>');
+                    }
+                }
+            });
+        }
+
+        init();
+
+        function data_pengunjung(){
+            if(status_manage_pengunjung == 1){
+                edit_pengunjung();
+            }else{
+                tambah_pengunjung();
+            }
+        }
+
+        function manage_pengunjung(type, id){
+            status_manage_pengunjung = type;
+            if(type == 1){
+                $('#modal-label')[0].innerHTML = "Edit Pengunjung";
+                id_pengunjung = id;
+                get_pengunjung(id);
+            }else{
+                $('#modal-label')[0].innerHTML = "Tambah Pengunjung";
+                $('input[name=nama]').val("");
+                $('input[name=email]').val("");
+                $('input[name=no_telp]').val("");
+                $('textarea')[0].value = "";
+                $('#manage_pengunjung').modal('show');
+                id_pengunjung = null;
+            }
+        }
+
+        function tambah_pengunjung(){
+            $.ajax({
+                method:"POST",
+                url:"insert.php",
+                data:{
+                    nama:$('input[name=nama]').val(),
+                    email:$('input[name=email]').val(),
+                    no_telp:$('input[name=no_telp]').val(),
+                    kesan:$('textarea')[0].value
+                }, 
+                success:(response)=>{
+                    if(response.success){
+                        $('input[name=nama]').val("");
+                        $('input[name=email]').val("");
+                        $('input[name=no_telp]').val("");
+                        $('textarea')[0].value = "";
+                        $('#manage_pengunjung').modal('hide');
+                        init();
+                    }else{
+
+                    }
+                }
+            });
+        }
+        
+        function edit_pengunjung(){
+            $.ajax({
+                method:"POST",
+                url:"update.php",
+                data:{
+                    id:id_pengunjung,
+                    nama:$('input[name=nama]').val(),
+                    email:$('input[name=email]').val(),
+                    no_telp:$('input[name=no_telp]').val(),
+                    kesan:$('textarea')[0].value
+                }, 
+                success:(response)=>{
+                    if(response.success){
+                        $('input[name=nama]').val("");
+                        $('input[name=email]').val("");
+                        $('input[name=no_telp]').val("");
+                        $('textarea')[0].value = "";
+                        $('#manage_pengunjung').modal('hide');
+                        init();
+                    }else{
+
+                    }
+                }
+            });
+        }
+
+        function get_pengunjung(id){
+            $.ajax({
+                method:"GET",
+                data:{
+                    id:id
+                },
+                url:"data_json.php",
+                success:(response)=>{
+                    $('input[name=nama]').val(response.nama);
+                    $('input[name=email]').val(response.email);
+                    $('input[name=no_telp]').val(response.no_telp);
+                    $('textarea')[0].value = response.kesan;
+                    $('#manage_pengunjung').modal('show');
+                }
+            });
+        }
+
+        function hapus_pengunjung(id){
+            $.ajax({
+                method:"POST",
+                data:{
+                    id:id
+                },
+                url:"delete.php",
+                success:(response)=>{
+                    if(response.success){
+                        init();
+                    }else{
+                        console.log(response.message);
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
